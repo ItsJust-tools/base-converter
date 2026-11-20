@@ -15,5 +15,5 @@ export { notepadTool } from './notepad-state';
 export { MixerToolCanvas as ToolCanvas } from './components/tool-canvas';
 export { ToolToolbar } from './components/tool-toolbar';
 export { ToolSidebar } from './components/tool-sidebar';
-export type { NotepadState } from './notepad-state';
-export type { ToolState, MixEntry, MixSnapshot, BlendCurve } from './types';
+export type { ToolState } from './tool-definition';
+export type { MixEntry, MixSnapshot, BlendCurve } from './types';
