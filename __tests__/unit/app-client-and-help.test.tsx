@@ -38,7 +38,7 @@ vi.mock('@itsjust/core', () => ({
   ),
   useTool: () => ({
     state: {
-      data: { text: 'Hello' },
+      data: { input: 'Hello', inputBase: 10, digitCase: 'lower', grouping: 'none', showTwosComplement: true, bitLength: 32 },
       setData: mockSetData,
       isDirty: false,
       lastSaved: 'just now',
@@ -54,22 +54,22 @@ vi.mock('@itsjust/core', () => ({
 
 vi.mock('@/tool', () => ({
   toolConfig: {
-    id: 'simple-notepad',
-    name: 'Notepad',
+    id: '1795194271',
+    name: 'Base Converter',
     version: '1.0.0',
     features: { sidebar: true },
-    theme: { brand: 'Notepad' },
+    theme: { brand: 'Base Converter' },
   },
   templateBaseVersion: '1.1.0',
-  ToolCanvas: ({ text }: { text: string }) => <div>canvas:{text}</div>,
+  ToolCanvas: ({ state }: { state: { input: string } }) => <div>canvas:{state.input}</div>,
   ToolToolbar: () => <div>toolbar</div>,
   ToolSidebar: ({ text }: { text: string }) => <div>sidebar:{text}</div>,
 }));
 
-vi.mock('@/tool/notepad-state', () => ({
-  notepadTool: {
+vi.mock('@/tool/tool-definition', () => ({
+  baseConverterTool: {
     serialize: (state: unknown) => JSON.stringify(state),
-    deserialize: () => ({ success: true, data: { content: 'From Shared Url', title: '' } }),
+    deserialize: () => ({ success: true, data: { input: 'From Shared Url', inputBase: 10 } }),
   },
 }));
 

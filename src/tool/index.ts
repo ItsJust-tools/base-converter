@@ -1,19 +1,27 @@
 export { default as toolConfig } from './tool.config';
-export { templateBaseVersion } from './tool.config';
+export { templateBaseVersion } from './template-metadata';
 export { templateMetadata, getPublicSiteUrl } from './template-metadata';
 export {
-  hexColorMixerTool,
-  updateEntry,
-  addEntry,
-  removeEntry,
-  setCurve,
-  undoState,
-  redoState,
-  validHexOrNull,
+  baseConverterTool,
+  parseInBase,
+  parseIntegerInBase,
+  formatInBase,
+  toUnsignedBits,
+  toTwosComplement,
+  groupBits,
+  requiredBitLength,
+  convertToAllBases,
+  twosComplementInfo,
 } from './tool-definition';
-export { notepadTool } from './notepad-state';
-export { MixerToolCanvas as ToolCanvas } from './components/tool-canvas';
+export { ToolCanvas } from './components/tool-canvas';
 export { ToolToolbar } from './components/tool-toolbar';
 export { ToolSidebar } from './components/tool-sidebar';
-export type { ToolState } from './tool-definition';
-export type { MixEntry, MixSnapshot, BlendCurve } from './types';
+export { Canvas } from './components/Canvas';
+export { Sidebar } from './components/Sidebar';
+export { Toolbar } from './components/Toolbar';
+export type {
+  ToolState,
+  DigitCase,
+  BitGrouping,
+  BaseConversion,
+} from './types';

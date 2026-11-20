@@ -27,7 +27,7 @@ function createPrintClone(element: HTMLElement): string {
   const textarea = clone.querySelector('textarea');
   if (textarea instanceof HTMLTextAreaElement && textarea.parentNode) {
     const replacement = document.createElement('div');
-    replacement.className = 'arc-export-replacement';
+    replacement.className = 'converter-textarea-replacement';
     replacement.textContent = textarea.value;
 
     const computed = window.getComputedStyle(textarea);

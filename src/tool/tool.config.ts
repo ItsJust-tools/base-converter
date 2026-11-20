@@ -1,15 +1,17 @@
-const toolConfig = {
-  id: "hex-color-mixer",
-  name: "HEX Color Mixer",
-  category: "Design",
-  description: "Blend two or more HEX colors with adjustable weights and interpolation to produce smooth gradient mixes with copyable results.",
-  version: "1.0.0",
-  exportFormats: ["png", "jpeg", "webp", "pdf"] as (
-    | "png"
-    | "jpeg"
-    | "webp"
-    | "pdf"
-  )[],
+import type { ToolConfig, ToolTheme } from '@itsjust/core';
+
+const toolTheme: ToolTheme = {
+  brand: 'Base Converter',
+  accent: '#10b981',
+};
+
+export const toolConfig: ToolConfig = {
+  id: '1795194271',
+  name: 'Base Converter',
+  description:
+    'Convert numbers between binary, octal, decimal, hexadecimal and arbitrary bases 2-36 with live input and bit grouping.',
+  version: '1.0.0',
+  exportFormats: ['png', 'jpeg', 'webp', 'pdf'],
   features: {
     export: true,
     autoSave: true,
@@ -18,11 +20,7 @@ const toolConfig = {
     statusBar: true,
     darkMode: true,
   },
-  theme: {
-    brand: "HEX Color Mixer",
-    icon: '🎨',
-  },
+  theme: toolTheme,
 };
 
-export const templateBaseVersion = '1.1.0';
 export default toolConfig;

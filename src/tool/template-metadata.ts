@@ -2,6 +2,8 @@ import toolConfig from './tool.config';
 
 const DEFAULT_DEV_URL = 'http://localhost:3000';
 
+export const templateBaseVersion = '1.4.0';
+
 export const templateMetadata = {
   htmlLang: 'en',
   locale: 'en_US',
