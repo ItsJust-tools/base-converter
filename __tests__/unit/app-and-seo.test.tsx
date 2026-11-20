@@ -12,8 +12,8 @@ import { cn } from '@/lib/utils';
 import { generateJsonLd, generateToolMetadata } from '@/lib/seo';
 import toolConfig from '@/tool/tool.config';
 import { getPublicSiteUrl, templateMetadata } from '@/tool/template-metadata';
-import { notepadTool } from '@/tool/notepad-state';
-import { ToolCanvas } from '@/tool/components/tool-canvas';
+import { hexColorMixerTool } from '@/tool/tool-definition';
+import { MixerToolCanvas as ToolCanvas } from '@/tool/components/tool-canvas';
 import { ToolSidebar } from '@/tool/components/tool-sidebar';
 import { ToolToolbar } from '@/tool/components/tool-toolbar';
 import type { ExporterLoader } from '@itsjust/core';
@@ -92,18 +92,17 @@ describe('app and seo', () => {
   it('covers tool definition and helper exports', async () => {
     expect(cn('a', undefined, 'b', false, null, 'c')).toBe('a b c');
     expect(getPublicSiteUrl()).toBe('http://localhost:3000');
-    const validState = notepadTool.initialState;
-    expect(notepadTool.deserialize(validState)).toEqual({
-      success: true,
-      data: validState,
-    });
-    expect(notepadTool.deserialize({ nope: true })).toEqual({
+    expect(hexColorMixerTool.initialState.entries.length).toBeGreaterThan(0);
+    expect(hexColorMixerTool.deserialize({ nope: true })).toEqual({
       success: false,
-      error: 'Invalid data format: expected valid aspect ratio calculator state',
+      error: 'Invalid data format: expected valid mixer state',
     });
-    expect(notepadTool.serialize(validState)).toContain('"ratioW"');
-    const exporters =
-      (notepadTool as { exporters?: Array<{ loader: ExporterLoader }> }).exporters ?? [];
+    expect(hexColorMixerTool.deserialize(hexColorMixerTool.initialState)).toEqual({
+      success: true,
+      data: hexColorMixerTool.initialState,
+    });
+    expect(hexColorMixerTool.serialize(hexColorMixerTool.initialState)).toContain('"entries"');
+    const exporters = (hexColorMixerTool as { exporters?: Array<{ loader: ExporterLoader }> }).exporters ?? [];
     expect(exporters).toHaveLength(4);
     const first = exporters[0];
     expect(first).toBeDefined();
@@ -114,17 +113,28 @@ describe('app and seo', () => {
   });
 
   it('renders tool components', () => {
+    const mixerState = hexColorMixerTool.initialState;
     render(
       <>
         <ToolToolbar />
-        <ToolSidebar state={notepadTool.initialState} onStateChange={() => {}} />
-        <ToolCanvas state={notepadTool.initialState} onChange={() => {}} />
+        <ToolSidebar
+          state={mixerState}
+          onEntryChange={() => {}}
+          onAddEntry={() => {}}
+          onRemoveEntry={() => {}}
+          onCurveChange={() => {}}
+          onRandomPalette={() => {}}
+          onUndo={() => {}}
+          onRedo={() => {}}
+          canUndo={false}
+          canRedo={false}
+        />
+        <ToolCanvas state={mixerState} />
       </>
     );
 
     expect(screen.getByRole('link', { name: 'Open help page' })).toBeInTheDocument();
-    expect(
-      screen.getByRole('application', { name: 'Aspect ratio calculator' })
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('result-preview')).toBeInTheDocument();
+    expect(screen.getByRole('application', { name: 'HEX Color Mixer canvas' })).toBeInTheDocument();
   });
 });

@@ -11,9 +11,28 @@ import {
 } from 'react';
 import { ToolShell, useTool, ImportExport } from '@itsjust/core';
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
-import { toolConfig, templateBaseVersion, ToolCanvas, ToolToolbar, ToolSidebar } from '@/tool';
-import { notepadTool as aspectRatioToolDef } from '@/tool/notepad-state';
-import type { ToolState } from '@/tool';
+import {
+  toolConfig,
+  templateBaseVersion,
+  ToolCanvas,
+  ToolToolbar,
+  ToolSidebar,
+} from '@/tool';
+import {
+  hexColorMixerTool,
+  updateEntry,
+  addEntry,
+  removeEntry,
+  setCurve,
+  undoState,
+  redoState,
+} from '@/tool/tool-definition';
+import type { ToolState, MixEntry } from '@/tool/types';
+
+const RANDOM_COLORS = [
+  '#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6',
+  '#3b82f6', '#8b5cf6', '#ec4899', '#64748b', '#0f172a',
+];
 
 export default function ToolClient() {
   const ToolShellCompat = ToolShell as unknown as ComponentType<Record<string, unknown>> & {
@@ -24,7 +43,7 @@ export default function ToolClient() {
     StatusBar?: ComponentType<{ children?: ReactNode }>;
   };
   const canvasRef = useRef<HTMLDivElement>(null);
-  const tool = useTool<ToolState>(aspectRatioToolDef, canvasRef);
+  const tool = useTool<ToolState>(hexColorMixerTool, canvasRef);
   const setToolData = tool.state.setData;
   const showToast = tool.toast;
   const [isSharing, setIsSharing] = useState(false);
@@ -33,20 +52,11 @@ export default function ToolClient() {
     () => typeof window !== 'undefined' && window.innerWidth > 768 && toolConfig.features.sidebar
   );
 
-  const title = toolConfig.name;
+  const state = tool.state.data;
+  const canUndo = state?.past?.length ? state.past.length > 0 : false;
+  const canRedo = state?.future?.length ? state.future.length > 0 : false;
+  const entryCount = state?.entries?.length ?? 0;
 
-  useEffect(() => {
-    document.title = title;
-  }, [title]);
-
-  const handleStateChange = useCallback(
-    (next: ToolState) => {
-      setToolData(next);
-    },
-    [setToolData]
-  );
-
-  // Load state from a shared URL (?state=<lz>, ?tool=<id>).
   useEffect(() => {
     if (hasLoadedSharedState.current) return;
     hasLoadedSharedState.current = true;
@@ -57,7 +67,7 @@ export default function ToolClient() {
       const serialized = decompressFromEncodedURIComponent(encodedState);
       if (!serialized) throw new Error('Invalid shared URL');
       const parsed: unknown = JSON.parse(serialized);
-      const deserialized = aspectRatioToolDef.deserialize(parsed);
+      const deserialized = hexColorMixerTool.deserialize(parsed);
       if (!deserialized.success) throw new Error(deserialized.error);
       setToolData(deserialized.data);
       showToast('Loaded state from shared URL', 'success');
@@ -67,28 +77,47 @@ export default function ToolClient() {
     }
   }, [setToolData, showToast]);
 
-  // Keep the URL in sync with the current state so calculations can be shared via link.
-  useEffect(() => {
-    if (!hasLoadedSharedState.current) return;
-    const timer = window.setTimeout(() => {
-      try {
-        const serialized = aspectRatioToolDef.serialize(tool.state.data);
-        const encodedState = compressToEncodedURIComponent(serialized);
-        const url = new URL(window.location.href);
-        url.searchParams.set('state', encodedState);
-        url.searchParams.set('tool', toolConfig.id);
-        window.history.replaceState(null, '', url.toString());
-      } catch {
-        // Non-fatal: URL sync is best-effort.
-      }
-    }, 400);
-    return () => window.clearTimeout(timer);
-  }, [tool.state.data]);
+  const handleEntryChange = useCallback(
+    (id: string, patch: Partial<Pick<MixEntry, 'hex' | 'weight'>>) => {
+      setToolData((prev: ToolState) => updateEntry(prev, id, patch));
+    },
+    [setToolData]
+  );
+
+  const handleAddEntry = useCallback(
+    (hex?: string) => {
+      const color = hex ?? RANDOM_COLORS[Math.floor(Math.random() * RANDOM_COLORS.length)] ?? "#3b82f6";
+      setToolData((prev: ToolState) => addEntry(prev, color));
+    },
+    [setToolData]
+  );
+
+  const handleRemoveEntry = useCallback(
+    (id: string) => {
+      setToolData((prev: ToolState) => removeEntry(prev, id));
+    },
+    [setToolData]
+  );
+
+  const handleCurveChange = useCallback(
+    (curve: 'linear' | 'even') => {
+      setToolData((prev: ToolState) => setCurve(prev, curve));
+    },
+    [setToolData]
+  );
+
+  const handleUndo = useCallback(() => {
+    setToolData((prev: ToolState) => undoState(prev));
+  }, [setToolData]);
+
+  const handleRedo = useCallback(() => {
+    setToolData((prev: ToolState) => redoState(prev));
+  }, [setToolData]);
 
   const handleShare = useCallback(async () => {
     setIsSharing(true);
     try {
-      const serialized = aspectRatioToolDef.serialize(tool.state.data);
+      const serialized = hexColorMixerTool.serialize(tool.state.data);
       const encodedState = compressToEncodedURIComponent(serialized);
       if (!encodedState) throw new Error('Failed to encode state for URL');
       const url = new URL(window.location.href);
@@ -99,7 +128,7 @@ export default function ToolClient() {
       const shareUrl = url.toString();
       if (navigator.share) {
         try {
-          await navigator.share({ title, url: shareUrl });
+          await navigator.share({ title: toolConfig.name, url: shareUrl });
           showToast('Shared URL ready', 'success');
           return;
         } catch (error) {
@@ -114,7 +143,7 @@ export default function ToolClient() {
     } finally {
       setIsSharing(false);
     }
-  }, [showToast, tool.state.data, title]);
+  }, [showToast, tool.state.data]);
 
   const toolbarContent = (
     <>
@@ -130,9 +159,26 @@ export default function ToolClient() {
     </>
   );
 
-  const sidebarContent = <ToolSidebar state={tool.state.data} onStateChange={handleStateChange} />;
+  const sidebarContent = (
+    <ToolSidebar
+      state={state}
+      onEntryChange={handleEntryChange}
+      onAddEntry={handleAddEntry}
+      onRemoveEntry={handleRemoveEntry}
+      onCurveChange={handleCurveChange}
+      onRandomPalette={handleAddEntry}
+      onUndo={handleUndo}
+      onRedo={handleRedo}
+      canUndo={canUndo}
+      canRedo={canRedo}
+    />
+  );
 
-  const canvasContent = <ToolCanvas state={tool.state.data} onChange={handleStateChange} />;
+  const canvasContent = (
+    <div ref={canvasRef} data-testid="mixer-canvas-root">
+      <ToolCanvas state={state} />
+    </div>
+  );
 
   const statusBarContent = (
     <>
@@ -150,9 +196,7 @@ export default function ToolClient() {
           'Ready'
         )}
       </span>
-      <span className="status-slot status-slot-ratio">
-        {tool.state.data.ratioW}:{tool.state.data.ratioH}
-      </span>
+      <span className="status-slot status-slot-entry-count">{entryCount} colors</span>
       <span className="status-slot status-slot-tool-version">Tool v{toolConfig.version}</span>
       <span className="status-slot status-slot-template-version">
         Template v{templateBaseVersion}
@@ -168,12 +212,10 @@ export default function ToolClient() {
     ToolShellCompat.StatusBar
   );
 
-  const actions = useMemo(() => tool.toolbarActions, [tool.toolbarActions]);
-
   return (
     <ToolShellCompat
       config={toolConfig}
-      actions={actions}
+      actions={useMemo(() => tool.toolbarActions, [tool.toolbarActions])}
       sidebarOpen={sidebarOpen}
       onSidebarChange={setSidebarOpen}
       toolbar={toolbarContent}
@@ -190,9 +232,7 @@ export default function ToolClient() {
             const SidebarSection = ToolShellCompat.Sidebar as ComponentType<{
               children?: ReactNode;
             }>;
-            const CanvasSection = ToolShellCompat.Canvas as ComponentType<{
-              children?: ReactNode;
-            }>;
+            const CanvasSection = ToolShellCompat.Canvas as ComponentType<{ children?: ReactNode }>;
             const StatusBarSection = ToolShellCompat.StatusBar as ComponentType<{
               children?: ReactNode;
             }>;

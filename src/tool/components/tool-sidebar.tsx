@@ -1,139 +1,143 @@
 'use client';
 
-import { useMemo } from 'react';
+import { blend, normalizeHex } from '../types';
 import type { ToolState } from '../types';
-import { RATIO_PRESETS } from '../tool.config';
-import { fitDimensions, parseDimension, simplifyRatio, solveMissing } from '../ratio';
 
 interface ToolSidebarProps {
   state: ToolState;
-  onStateChange: (state: ToolState) => void;
+  onEntryChange: (id: string, patch: { hex?: string; weight?: number }) => void;
+  onAddEntry: (hex?: string) => void;
+  onRemoveEntry: (id: string) => void;
+  onCurveChange: (curve: 'linear' | 'even') => void;
+  onRandomPalette: (hex: string) => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
-function fmt(n: number): string {
-  return Number.isInteger(n) ? String(n) : n.toFixed(2);
-}
+const RANDOM_COLORS = [
+  '#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6',
+  '#3b82f6', '#8b5cf6', '#ec4899', '#64748b', '#0f172a',
+];
 
-export function ToolSidebar({ state, onStateChange }: ToolSidebarProps) {
-  const solved = useMemo(
-    () =>
-      solveMissing(state.ratioW, state.ratioH, {
-        width: parseDimension(state.width),
-        height: parseDimension(state.height),
-      }),
-    [state]
-  );
-  const simplified = useMemo(() => {
-    const w = parseDimension(state.width);
-    const h = parseDimension(state.height);
-    return w !== null && h !== null ? simplifyRatio(w, h) : null;
-  }, [state]);
-  const fitted = useMemo(
-    () =>
-      fitDimensions(
-        state.ratioW,
-        state.ratioH,
-        parseDimension(state.boxWidth) ?? 0,
-        parseDimension(state.boxHeight) ?? 0,
-        state.fitMode,
-        state.integerMode
-      ),
-    [state]
-  );
+export function ToolSidebar({
+  state,
+  onEntryChange,
+  onAddEntry,
+  onRemoveEntry,
+  onCurveChange,
+  onRandomPalette,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
+}: ToolSidebarProps) {
+  const { result } = blend(state.entries, state.curve);
 
-  const copy = async (text: string) => {
-    if (!text) return;
-    await navigator.clipboard.writeText(text);
-  };
+  const randomHex = () => RANDOM_COLORS[Math.floor(Math.random() * RANDOM_COLORS.length)] ?? "#3b82f6";
 
   return (
-    <div className="arc-sidebar flex flex-col gap-4 p-2 text-sm">
+    <div className="mixer-sidebar">
       <div className="sidebar-section">
-        <h3>Presets</h3>
-        <div className="flex flex-wrap gap-1">
-          {RATIO_PRESETS.map((p) => (
-            <button
-              key={p.label}
-              type="button"
-              className={`rounded border px-2 py-0.5 text-xs ${
-                state.ratioW === p.w && state.ratioH === p.h
-                  ? 'bg-blue-500 text-white'
-                  : 'hover:bg-blue-500/10'
-              }`}
-              onClick={() =>
-                onStateChange({
-                  ...state,
-                  ratioW: p.w,
-                  ratioH: p.h,
-                  orientation: p.w >= p.h ? 'landscape' : 'portrait',
-                })
-              }
-            >
-              {p.label}
-            </button>
-          ))}
+        <h3>Mix Colors</h3>
+        <div className="mixer-history-controls">
+          <button type="button" className="mixer-btn" aria-label="Undo" onClick={onUndo} disabled={!canUndo}>
+            Undo
+          </button>
+          <button type="button" className="mixer-btn" aria-label="Redo" onClick={onRedo} disabled={!canRedo}>
+            Redo
+          </button>
+        </div>
+        <ul className="mixer-entry-list" aria-label="Mix color entries">
+          {state.entries.map((entry) => {
+            const normalized = normalizeHex(entry.hex);
+            return (
+              <li key={entry.id} className="mixer-entry">
+                <span
+                  className="mixer-entry-swatch"
+                  data-testid={`swatch-${entry.id}`}
+                  style={{ backgroundColor: normalized ?? 'transparent' }}
+                />
+                <input
+                  type="text"
+                  className="mixer-hex-input"
+                  aria-label={`HEX value for entry ${entry.id}`}
+                  value={entry.hex}
+                  aria-invalid={!normalized}
+                  onChange={(e) => onEntryChange(entry.id, { hex: e.target.value })}
+                  placeholder="#rrggbb"
+                  spellCheck={false}
+                />
+                <input
+                  type="range"
+                  className="mixer-weight-slider"
+                  aria-label={`Weight for entry ${entry.id}`}
+                  min={1}
+                  max={100}
+                  value={entry.weight}
+                  onChange={(e) => onEntryChange(entry.id, { weight: Number(e.target.value) })}
+                />
+                <span className="mixer-weight-value">{entry.weight}</span>
+                <button
+                  type="button"
+                  className="mixer-remove-btn"
+                  aria-label={`Remove entry ${entry.id}`}
+                  onClick={() => onRemoveEntry(entry.id)}
+                >
+                  ✕
+                </button>
+                {!normalized && (
+                  <span className="mixer-error-hint" role="alert">
+                    Invalid HEX
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        <div className="mixer-actions">
+          <button type="button" className="mixer-btn mixer-btn-primary" aria-label="Add color" onClick={() => onAddEntry()}>
+            + Add Color
+          </button>
+          <button
+            type="button"
+            className="mixer-btn"
+            aria-label="Random palette"
+            onClick={() => {
+              const hex = randomHex();
+              onRandomPalette(hex);
+            }}
+          >
+            🎲 Random
+          </button>
         </div>
       </div>
 
       <div className="sidebar-section">
-        <h3>Result</h3>
-        <div className="stat-row flex items-center justify-between gap-2">
-          <span>{solved ? `${fmt(solved.width)} × ${fmt(solved.height)}` : '—'}</span>
-          <button
-            type="button"
-            className="rounded border px-2 py-0.5 text-xs hover:bg-blue-500/10 disabled:opacity-40"
-            onClick={() => copy(solved ? `${fmt(solved.width)} × ${fmt(solved.height)}` : '')}
-            disabled={!solved}
-            aria-label="Copy solved dimensions"
-          >
-            Copy
-          </button>
+        <h3>Blend Curve</h3>
+        <div className="mixer-curve-controls" role="radiogroup" aria-label="Blend curve">
+          <label>
+            <input
+              type="radio"
+              name="mixer-curve"
+              checked={state.curve === 'linear'}
+              onChange={() => onCurveChange('linear')}
+            />
+            Linear (weights)
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="mixer-curve"
+              checked={state.curve === 'even'}
+              onChange={() => onCurveChange('even')}
+            />
+            Even
+          </label>
         </div>
-        <div className="stat-row flex items-center justify-between gap-2">
-          <span className="opacity-70">Ratio</span>
-          <span>
-            {state.ratioW}:{state.ratioH}
-          </span>
-        </div>
-      </div>
-
-      <div className="sidebar-section">
-        <h3>Simplified</h3>
-        <div className="stat-row flex items-center justify-between gap-2">
-          <span>{simplified ? `${simplified.ratioW}:${simplified.ratioH}` : '—'}</span>
-          <button
-            type="button"
-            className="rounded border px-2 py-0.5 text-xs hover:bg-blue-500/10 disabled:opacity-40"
-            onClick={() => copy(simplified ? `${simplified.ratioW}:${simplified.ratioH}` : '')}
-            disabled={!simplified}
-            aria-label="Copy simplified ratio"
-          >
-            Copy
-          </button>
-        </div>
-      </div>
-
-      <div className="sidebar-section">
-        <h3>Fit / Cover</h3>
-        <div className="stat-row flex items-center justify-between gap-2">
-          <span>{fitted ? `${fmt(fitted.width)} × ${fmt(fitted.height)}` : '—'}</span>
-          <button
-            type="button"
-            className="rounded border px-2 py-0.5 text-xs hover:bg-blue-500/10 disabled:opacity-40"
-            onClick={() => copy(fitted ? `${fmt(fitted.width)} × ${fmt(fitted.height)}` : '')}
-            disabled={!fitted}
-            aria-label="Copy fit dimensions"
-          >
-            Copy
-          </button>
-        </div>
-        <div className="stat-row flex items-center justify-between gap-2">
-          <span className="opacity-70">Mode</span>
-          <span>{state.fitMode}</span>
-        </div>
+        {result && <p className="mixer-result-hint">Result: {result}</p>}
       </div>
     </div>
   );
 }
-
-export default ToolSidebar;
