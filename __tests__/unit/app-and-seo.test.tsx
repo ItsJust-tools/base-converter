@@ -108,12 +108,30 @@ describe('app and seo', () => {
       success: false,
       error: 'Invalid data format: expected { input: string, inputBase: number (2-36), ... }',
     });
-    expect(baseConverterTool.serialize({ ...DEFAULT_STATE, input: '11' })).toContain('"input":"11"');
-    expect(baseConverterTool.deserialize({ input: '11', inputBase: 10, digitCase: 'upper', grouping: 'byte', bitLength: 8 })).toEqual({
+    expect(baseConverterTool.serialize({ ...DEFAULT_STATE, input: '11' })).toContain(
+      '"input":"11"'
+    );
+    expect(
+      baseConverterTool.deserialize({
+        input: '11',
+        inputBase: 10,
+        digitCase: 'upper',
+        grouping: 'byte',
+        bitLength: 8,
+      })
+    ).toEqual({
       success: true,
-      data: { input: '11', inputBase: 10, digitCase: 'upper', grouping: 'byte', showTwosComplement: true, bitLength: 8 },
+      data: {
+        input: '11',
+        inputBase: 10,
+        digitCase: 'upper',
+        grouping: 'byte',
+        showTwosComplement: true,
+        bitLength: 8,
+      },
     });
-    const exporters = (baseConverterTool as { exporters?: Array<{ loader: ExporterLoader }> }).exporters ?? [];
+    const exporters =
+      (baseConverterTool as { exporters?: Array<{ loader: ExporterLoader }> }).exporters ?? [];
     expect(exporters).toHaveLength(4);
     const first = exporters[0];
     expect(first).toBeDefined();

@@ -12,7 +12,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ state, onChange }) => {
   const update = (patch: Partial<ToolState>) => onChange({ ...state, ...patch });
 
   return (
-    <div className="p-4 space-y-6 text-sm overflow-y-auto h-full" data-testid="base-converter-sidebar">
+    <div
+      className="p-4 space-y-6 text-sm overflow-y-auto h-full"
+      data-testid="base-converter-sidebar"
+    >
       <div>
         <h3 className="mb-2 font-medium text-gray-900 dark:text-gray-100">Digit case</h3>
         <div className="flex gap-2">
@@ -49,9 +52,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ state, onChange }) => {
       </div>
 
       <div>
-        <h3 className="mb-2 font-medium text-gray-900 dark:text-gray-100">Two's complement</h3>
+        <h3 className="mb-2 font-medium text-gray-900 dark:text-gray-100">Two&apos;s complement</h3>
         <label className="flex items-center justify-between gap-2">
-          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Show signed representation</span>
+          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+            Show signed representation
+          </span>
           <input
             type="checkbox"
             checked={state.showTwosComplement}

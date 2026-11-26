@@ -52,7 +52,10 @@ export const Canvas: React.FC<CanvasProps> = ({ state, onChange }) => {
       const base = i + 7;
       if (base === 8 || base === 10 || base === 16) return null;
       return { base, label: `Base ${base}`, conversion: conversions[base - 2] };
-    }).filter((r): r is { base: number; label: string; conversion: (typeof conversions)[number] } => r !== null),
+    }).filter(
+      (r): r is { base: number; label: string; conversion: (typeof conversions)[number] } =>
+        r !== null
+    ),
   ];
 
   const inputValue = parseIntegerInBase(state.input, state.inputBase);
@@ -99,23 +102,27 @@ export const Canvas: React.FC<CanvasProps> = ({ state, onChange }) => {
           const { base, label, conversion } = row;
           if (!conversion) return null;
           return (
-          <div
-            key={base}
-            className="flex items-center justify-between gap-3 rounded-md border border-gray-200 dark:border-gray-800 px-3 py-2"
-            data-testid={`base-row-${base}`}
-          >
-            <span className="w-20 shrink-0 text-xs font-medium text-gray-500 dark:text-gray-400">{label}</span>
-            {conversion.error ? (
-              <span role="alert" className="flex-1 text-xs text-red-600 dark:text-red-400">
-                {conversion.error}
+            <div
+              key={base}
+              className="flex items-center justify-between gap-3 rounded-md border border-gray-200 dark:border-gray-800 px-3 py-2"
+              data-testid={`base-row-${base}`}
+            >
+              <span className="w-20 shrink-0 text-xs font-medium text-gray-500 dark:text-gray-400">
+                {label}
               </span>
-            ) : (
-              <code className="flex-1 break-all font-mono text-sm text-gray-900 dark:text-gray-100">
-                {conversion.formatted || '—'}
-              </code>
-            )}
-            {!conversion.error && conversion.formatted ? <CopyButton value={conversion.formatted} /> : null}
-          </div>
+              {conversion.error ? (
+                <span role="alert" className="flex-1 text-xs text-red-600 dark:text-red-400">
+                  {conversion.error}
+                </span>
+              ) : (
+                <code className="flex-1 break-all font-mono text-sm text-gray-900 dark:text-gray-100">
+                  {conversion.formatted || '—'}
+                </code>
+              )}
+              {!conversion.error && conversion.formatted ? (
+                <CopyButton value={conversion.formatted} />
+              ) : null}
+            </div>
           );
         })}
       </div>
@@ -124,15 +131,18 @@ export const Canvas: React.FC<CanvasProps> = ({ state, onChange }) => {
         <div className="rounded-md border border-gray-200 dark:border-gray-800 px-3 py-2">
           <div className="flex items-center justify-between gap-3">
             <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-              Two's complement ({state.bitLength} bit)
+              Two&apos;s complement ({state.bitLength} bit)
             </span>
             {twos ? <CopyButton value={twos.replace(/ /g, '')} /> : null}
           </div>
           {twos ? (
-            <code className="mt-1 block break-all font-mono text-sm text-gray-900 dark:text-gray-100">{twos}</code>
+            <code className="mt-1 block break-all font-mono text-sm text-gray-900 dark:text-gray-100">
+              {twos}
+            </code>
           ) : (
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Enter a valid integer (no fractional part) to see the two's complement representation.
+              Enter a valid integer (no fractional part) to see the two&apos;s complement
+              representation.
             </p>
           )}
           {inputValue !== null && (

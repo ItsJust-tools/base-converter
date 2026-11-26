@@ -53,8 +53,8 @@ export function ToolSidebar({ text, fontSize, onFontSizeChange }: ToolSidebarPro
       <div className="sidebar-section">
         <h3>Digit reference</h3>
         <p className="text-xs leading-relaxed">
-          Digits above 9 map to letters: a=10, b=11, … z=35. Inputs may include an optional
-          leading sign and a single fractional part.
+          Digits above 9 map to letters: a=10, b=11, … z=35. Inputs may include an optional leading
+          sign and a single fractional part.
         </p>
       </div>
     </div>

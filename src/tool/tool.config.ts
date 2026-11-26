@@ -1,9 +1,4 @@
-import type { ToolConfig, ToolTheme } from '@itsjust/core';
-
-const toolTheme: ToolTheme = {
-  brand: 'Base Converter',
-  accent: '#10b981',
-};
+import type { ToolConfig } from '@itsjust/core';
 
 export const toolConfig: ToolConfig = {
   id: '1795194271',
@@ -20,7 +15,13 @@ export const toolConfig: ToolConfig = {
     statusBar: true,
     darkMode: true,
   },
-  theme: toolTheme,
+  theme: {
+    accent: '#10b981',
+    accentHover: '#059669',
+    accentSubtle: 'rgba(16, 185, 129, 0.08)',
+    brand: 'Base Converter',
+    icon: '\u{1F416}',
+  },
 };
 
 export default toolConfig;

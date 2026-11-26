@@ -88,7 +88,8 @@ export function formatInBase(value: number, base: number): string | null {
   while (fracDigits.length > 0 && fracDigits[fracDigits.length - 1] === '0') {
     fracDigits.pop();
   }
-  const body = fracDigits.length > 0 ? `${intDigits.join('')}.${fracDigits.join('')}` : intDigits.join('');
+  const body =
+    fracDigits.length > 0 ? `${intDigits.join('')}.${fracDigits.join('')}` : intDigits.join('');
   return sign + body;
 }
 
@@ -183,7 +184,11 @@ export function convertToAllBases(state: ToolState): BaseConversion[] {
       continue;
     }
     if (value === null) {
-      results.push({ value: '', formatted: '', error: validationError(state.input, state.inputBase) });
+      results.push({
+        value: '',
+        formatted: '',
+        error: validationError(state.input, state.inputBase),
+      });
       continue;
     }
     const converted = formatInBase(value, base);
@@ -238,7 +243,11 @@ export const baseConverterTool: Tool<ToolState> = {
     }
     const v = data as Partial<ToolState>;
     const inputOk = typeof v.input === 'string';
-    const baseOk = typeof v.inputBase === 'number' && Number.isInteger(v.inputBase) && v.inputBase >= MIN_BASE && v.inputBase <= MAX_BASE;
+    const baseOk =
+      typeof v.inputBase === 'number' &&
+      Number.isInteger(v.inputBase) &&
+      v.inputBase >= MIN_BASE &&
+      v.inputBase <= MAX_BASE;
     if (!inputOk || !baseOk) {
       return {
         success: false,
@@ -247,8 +256,11 @@ export const baseConverterTool: Tool<ToolState> = {
     }
     const digitCase: DigitCase = v.digitCase === 'upper' ? 'upper' : 'lower';
     const grouping: BitGrouping =
-      v.grouping === 'nibble' || v.grouping === 'byte' || v.grouping === 'none' ? v.grouping : 'none';
-    const showTwosComplement = typeof v.showTwosComplement === 'boolean' ? v.showTwosComplement : true;
+      v.grouping === 'nibble' || v.grouping === 'byte' || v.grouping === 'none'
+        ? v.grouping
+        : 'none';
+    const showTwosComplement =
+      typeof v.showTwosComplement === 'boolean' ? v.showTwosComplement : true;
     const bitLength =
       typeof v.bitLength === 'number' && Number.isInteger(v.bitLength) && v.bitLength >= 1
         ? v.bitLength

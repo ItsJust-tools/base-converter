@@ -105,7 +105,7 @@ describe('toUnsignedBits / toTwosComplement / groupBits', () => {
     expect(toUnsignedBits(0, 4)).toBe('0000');
   });
 
-  it('produces two\'s complement', () => {
+  it("produces two's complement", () => {
     expect(toTwosComplement(5, 8)).toBe('00000101');
     expect(toTwosComplement(-1, 8)).toBe('11111111');
     expect(toTwosComplement(-128, 8)).toBe('10000000');
@@ -131,12 +131,12 @@ describe('toUnsignedBits / toTwosComplement / groupBits', () => {
 
 describe('twosComplementInfo', () => {
   it('returns grouped bits for integer input', () => {
-    expect(twosComplementInfo(state({ input: '-1', inputBase: 10, bitLength: 8, grouping: 'none' }))).toBe(
-      '11111111'
-    );
-    expect(twosComplementInfo(state({ input: '-1', inputBase: 10, bitLength: 8, grouping: 'nibble' }))).toBe(
-      '1111 1111'
-    );
+    expect(
+      twosComplementInfo(state({ input: '-1', inputBase: 10, bitLength: 8, grouping: 'none' }))
+    ).toBe('11111111');
+    expect(
+      twosComplementInfo(state({ input: '-1', inputBase: 10, bitLength: 8, grouping: 'nibble' }))
+    ).toBe('1111 1111');
   });
 
   it('returns null for fractional or invalid input', () => {
@@ -145,9 +145,9 @@ describe('twosComplementInfo', () => {
   });
 
   it('accepts input in other bases', () => {
-    expect(twosComplementInfo(state({ input: 'ff', inputBase: 16, bitLength: 8, grouping: 'none' }))).toBe(
-      '11111111'
-    );
+    expect(
+      twosComplementInfo(state({ input: 'ff', inputBase: 16, bitLength: 8, grouping: 'none' }))
+    ).toBe('11111111');
   });
 });
 
@@ -163,17 +163,23 @@ describe('convertToAllBases', () => {
   });
 
   it('groups binary output as nibbles', () => {
-    const results: BaseConversion[] = convertToAllBases(state({ input: '255', inputBase: 10, grouping: 'nibble' }));
+    const results: BaseConversion[] = convertToAllBases(
+      state({ input: '255', inputBase: 10, grouping: 'nibble' })
+    );
     expect(results[0]!.formatted).toBe('1111 1111');
   });
 
   it('groups binary output as bytes', () => {
-    const results: BaseConversion[] = convertToAllBases(state({ input: '65535', inputBase: 10, grouping: 'byte' }));
+    const results: BaseConversion[] = convertToAllBases(
+      state({ input: '65535', inputBase: 10, grouping: 'byte' })
+    );
     expect(results[0]!.formatted).toBe('11111111 11111111');
   });
 
   it('applies uppercase digits', () => {
-    const results: BaseConversion[] = convertToAllBases(state({ input: '255', inputBase: 10, digitCase: 'upper' }));
+    const results: BaseConversion[] = convertToAllBases(
+      state({ input: '255', inputBase: 10, digitCase: 'upper' })
+    );
     expect(results[14]!.formatted).toBe('FF');
     expect(results[0]!.formatted).toBe('1111 1111');
   });
@@ -198,9 +204,9 @@ describe('convertToAllBases', () => {
   it('handles negative input', () => {
     const results: BaseConversion[] = convertToAllBases(state({ input: '-255', inputBase: 10 }));
     expect(results[14]!.value).toBe('-ff');
-    expect(twosComplementInfo(state({ input: '-255', inputBase: 10, bitLength: 16, grouping: 'none' }))).toBe(
-      '1111111100000001'
-    );
+    expect(
+      twosComplementInfo(state({ input: '-255', inputBase: 10, bitLength: 16, grouping: 'none' }))
+    ).toBe('1111111100000001');
   });
 
   it('echoes the input row for the input base', () => {
@@ -212,7 +218,14 @@ describe('convertToAllBases', () => {
 
 describe('baseConverterTool serialize/deserialize', () => {
   it('round-trips full state', () => {
-    const s = state({ input: 'ff', inputBase: 16, digitCase: 'upper', grouping: 'byte', showTwosComplement: false, bitLength: 8 });
+    const s = state({
+      input: 'ff',
+      inputBase: 16,
+      digitCase: 'upper',
+      grouping: 'byte',
+      showTwosComplement: false,
+      bitLength: 8,
+    });
     const json = baseConverterTool.serialize(s);
     const result = baseConverterTool.deserialize(JSON.parse(json));
     expect(result.success).toBe(true);
@@ -240,7 +253,12 @@ describe('baseConverterTool serialize/deserialize', () => {
   });
 
   it('rejects invalid enum values by defaulting safely', () => {
-    const result = baseConverterTool.deserialize({ input: '10', inputBase: 2, digitCase: 'weird', grouping: 'bogus' });
+    const result = baseConverterTool.deserialize({
+      input: '10',
+      inputBase: 2,
+      digitCase: 'weird',
+      grouping: 'bogus',
+    });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.digitCase).toBe('lower');
